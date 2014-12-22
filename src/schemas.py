@@ -1,4 +1,6 @@
+from pony.orm import *
 
+db = Database('sqlite', ':memory:')
 
 class Game(db.Entity):
 	gameID = PrimaryKey(int)

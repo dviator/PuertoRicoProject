@@ -1,17 +1,54 @@
-from bs4 import BeautifulSoup
-import urllib
+from pony.orm import *
 import sys
-import time
+import json
+from pprint import pprint
 
-for arg in sys.argv:
-	url = arg
+#####################################################
+# PRParser class
+class PRParser:
 
-realURL = urllib.geturl(url)
-print(realURL)
-response = urllib.request.urlopen(url)
-data = response.read()
+	def __init__(self, data):
+		self.data = data
 
-f = open('logfile2.txt', 'wb')
-f.write(data)
+	def __init__(self, log_name):
+		print("Opening PR JSON log ", log_name, "...")
+		json_data = open(log_name)
+		print("Parsing PR JSON log ", log_name, "...")
+		self.data = json.load(json_data)
 
+	################################################
+	# FUNCTION getMove(int id)
+	# Reads a 1-indexed move id and the parsed json data object
+	# and returns a json array containing a number of "args" object
+	def getMove(self, id):
+		return self.data["data"]["data"][id-1]["data"]
+	# end getMove
+	################################################
+
+	################################################
+	# FUNCTION parseMove(int id)
+	# Reads a 1-indexed move id and the parsed json data object
+	# and returns a json array containing a number of "args" object
+	def parseMove(self, id):
+		move = self.getMove(id)
+		# Check move type in conditional
+
+	# end getMove
+	################################################
+
+
+# End PRParser class
+####################################################
+
+#################################################
+# Main Code
+#
+db = Database('sqlite', ':memory:')
+if len(sys.argv) != 2:
+	print(sys.argv[0], " requires the name of a PR JSON log")
+	sys.exit(1)
+
+# Sample parser instance
+parser = PRParser(sys.argv[1])
+pprint(parser.getMove(2))
 
