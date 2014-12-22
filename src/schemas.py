@@ -14,6 +14,8 @@ class Turn(db.Entity):
 	TurnNum = Required(int)
 	EventType = str
 	Governor = set(Player)
+	Action = str
+	ActivePlayer = set(Player)
 
 class Player(db.Entity):
 	gameID = Required(Game)
@@ -41,6 +43,6 @@ class Ships(db.Entity):
 	Capacity = int
 	CropType = str
 	CropNum = int
-	
+
 
 
