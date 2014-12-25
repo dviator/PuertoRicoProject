@@ -3,6 +3,36 @@ import sys
 import json
 from pprint import pprint
 
+#####################################################
+# TurnTracker class
+# Need to figure out the actual names for this but this is the basic idea for the TurnTracker class
+# round - a governor round
+# turn - a player turn in a governor round
+# action - any granular action
+class TurnTracker:
+
+	def __init__(self, num_players):
+		# Relative counters (i.e. turn resets to 0 at end of round)
+		self.num_players = num_players
+		self.round = 0
+		self.turn = 0
+		self.action = 0
+
+		# Absolute counters
+		self.abs_round = 0
+		self.abs_turn = 0
+		self.abs_action = 0
+
+	def inc_action(self):
+		# increment absolute counter
+		self.abs_action += 1
+		self.action += 1
+
+	def inc_turn(self):
+
+
+# end TurnTracker class
+#####################################################
 
 #####################################################
 # PRParser class
@@ -48,10 +78,10 @@ class PRParser:
 
 	################################################
 	# FUNCTION getMove(int id)
-	# Reads a 1-indexed move id and the parsed json data object
+	# Reads a 0-indexed move id and the parsed json data object
 	# and returns a json array containing a number of "args" object
 	def getMove(self, id):
-		return self.data["data"]["data"][id - 1]["data"]
+		return self.data["data"]["data"][id]["data"]
 
 	# end getMove
 	################################################
@@ -62,11 +92,25 @@ class PRParser:
 	# to be accessed/committed to the database
 	def parseMove(self, id):
 		move = self.getMove(id)
-	# Check move type in conditional
+		# get the role type if there is one in the move
+		rol = "None"
+		if 'rol_type' in move[0]['args']:
+			rol = move[0]['args']['rol_type']
+			return self.parseRole(move)
+		# if there is no role, move does something else (check json keys to figure out)
+
+		# Check move type in conditional
 
 	# end getMove
 	################################################
 
+	################################################
+	# FUNCTION parseRole(json move)
+	# Parses a move which is defined by a role
+	# returns the correct ORM objects
+	def parseRole(self, move):
+		print(len(move))
+		pprint(move[5]['args'])
 
 # End PRParser class
 ####################################################
@@ -81,5 +125,4 @@ if len(sys.argv) != 2:
 
 # Sample parser instance
 parser = PRParser(sys.argv[1])
-for i in range(1, parser.numMoves):
-	parser.getMoveRole(i)
+move = parser.parseMove(1)
