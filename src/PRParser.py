@@ -1,7 +1,10 @@
-from pony.orm import *
+from schemas import *
 import sys
+import re
 import json
 from pprint import pprint
+
+
 
 #####################################################
 # TurnTracker class
@@ -28,8 +31,7 @@ class TurnTracker:
 		self.abs_action += 1
 		self.action += 1
 
-	def inc_turn(self):
-
+#	def inc_turn(self):
 
 # end TurnTracker class
 #####################################################
@@ -54,14 +56,25 @@ class PRParser:
 		print("Parsing PR JSON log ", log_name, "...")
 		self.data = json.load(json_data)
 		self.numMoves = len(self.data["data"]["data"])
-		self.players = self.getNumPlayers()
+		self.players = self.getPlayers()
 		self.numPlayers = len(self.players)
+		self.game = self.initGame()
 
 	################################################
+	# FUNCTION initGame()
+	# Initializes the game entity
+	def initGame(self):
+		FullID = self.data["data"]["data"][0]["channel"]
+		ID_index = re.search("\d+",FullID)
+		ID = FullID[ID_index.start():]
+		# TODO: Add times
+		with db_session:
+			return Game(gameID = ID, numOfPlayers = self.numPlayers)
+
 	# FUNCTION getNumPlayers()
 	# Computes the number of players in a game by analyzing
 	# the first governor round
-	def getNumPlayers(self):
+	def getPlayers(self):
 		# loops through the moves, keeping track of each player seen
 		# when a player name is repeated, know that that a full governor rotation
 		# is completed
@@ -118,11 +131,10 @@ class PRParser:
 #################################################
 # Main Code
 #
-db = Database('sqlite', ':memory:')
+
 if len(sys.argv) != 2:
 	print(sys.argv[0], " requires the name of a PR JSON log")
 	sys.exit(1)
 
 # Sample parser instance
 parser = PRParser(sys.argv[1])
-move = parser.parseMove(1)
