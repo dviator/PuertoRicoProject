@@ -1,5 +1,8 @@
 from pony.orm import *
+import os
 
+## Delete created database
+os.remove("sqlite.db")
 db = Database("sqlite", "sqlite.db", create_db=True)
 
 class Game(db.Entity):
@@ -9,8 +12,6 @@ class Game(db.Entity):
 	EndTime = Optional(str)
 	Turns = Set("Turn")
 	Players = Set("Player")
-	Buildings = Set("Building")
-	Plantations = Set("Plantation")
 	Ships = Set("Ships")
 
 class Turn(db.Entity):
@@ -24,34 +25,39 @@ class Turn(db.Entity):
 
 class Player(db.Entity):
 	gameID = Required(Game)
-	playerID = PrimaryKey(int)
+	playerID = Required(int)
 	playerName = Required(str)
-	colonists = int
-	victoryPoints = int
-	Doubloons = int
+	colonists = Required(int)
+	victoryPoints = Required(int)
+	Doubloons = Required(int)
 	Turns = Set("Turn")
 	Buildings = Set("Building")
 	Plantations = Set("Plantation")
+	PrimaryKey(gameID, playerID)
 
+# Game id is included in ownerID Foreign key
 class Building(db.Entity):
-	gameID = Required(Game)
 	ownerID = Required(Player)
-	buildingID = PrimaryKey(int)
-	activated = bool
+	buildingID = Required(int)
+	activated = Required(bool)
+	PrimaryKey(ownerID, buildingID)
 
-
+# Game id is included in ownerID Foreign key
 class Plantation(db.Entity):
-	gameID = Required(Game)
 	ownerID = Required(Player)
-	plantationID = PrimaryKey(int)
-	activated = bool
+	plantationID = Required(int)
+	plantationType = Required(str)
+	activated = Required(bool)
+	PrimaryKey(ownerID, plantationID)
 
 class Ships(db.Entity):
 	gameID = Required(Game)
 	shipID = Required(int)
-	Capacity = int
-	CropType = str
-	CropNum = int
+	Capacity = Required(int)
+	CropType = Required(str)
+	CropNum = Required(int)
+
+# TURN ON DEBUGGING
+sql_debug(True)
 
 db.generate_mapping(create_tables=True)
-

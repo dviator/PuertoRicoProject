@@ -38,6 +38,7 @@ class TurnTracker:
 
 #####################################################
 # PRParser class
+@db_session
 class PRParser:
 
 	#################################################
@@ -56,9 +57,8 @@ class PRParser:
 		print("Parsing PR JSON log ", log_name, "...")
 		self.data = json.load(json_data)
 		self.numMoves = len(self.data["data"]["data"])
-		self.players = self.getPlayers()
-		self.numPlayers = len(self.players)
 		self.game = self.initGame()
+		self.Players, self.Plantations = self.getPlayers()
 
 	################################################
 	# FUNCTION initGame()
@@ -68,12 +68,14 @@ class PRParser:
 		ID_index = re.search("\d+",FullID)
 		ID = FullID[ID_index.start():]
 		# TODO: Add times
-		with db_session:
-			return Game(gameID = ID, numOfPlayers = self.numPlayers)
+		# Number of players will be updated once it is computed
+		return Game(gameID = ID, numOfPlayers = 0)
 
+	################################################
 	# FUNCTION getNumPlayers()
 	# Computes the number of players in a game by analyzing
 	# the first governor round
+	# Initializes the player/plantation table entries
 	def getPlayers(self):
 		# loops through the moves, keeping track of each player seen
 		# when a player name is repeated, know that that a full governor rotation
@@ -87,7 +89,50 @@ class PRParser:
 					name = move[i]["args"]['player_name']
 					if name not in players:
 						players.append(move[i]["args"]['player_name'])
-		return players
+		Players = []
+		Plantations = []
+		for player_num, player in enumerate(players):
+			if len(players) == 2:
+				numDubloons = 3
+				# Is governor
+				if player_num == 0:
+					plantation = "indigo"
+				else:
+					plantation = "corn"
+			elif len(players) == 3:
+				numDubloons = 2
+				if player_num == 0 or player_num == 1:
+					plantation = "indigo"
+				else:
+					plantation = "corn"
+			elif len(players) == 4:
+				numDubloons = 3
+				if player_num == 0 or player_num == 1:
+					plantation = "indigo"
+				else:
+					plantation = "corn"
+			# Create necessary entities
+			Players.append(Player(gameID = self.game.gameID, playerID = player_num, playerName = player,
+								  colonists = 0, victoryPoints = 0, Doubloons = numDubloons))
+			Plantations.append(Plantation(ownerID = (self.game.gameID, player_num), plantationID = self.getNextPlantationID(self.game.gameID, player_num),
+										  plantationType = plantation, activated = False))
+			# Update game to include number of players
+			self.game.numOfPlayers = len(players)
+		return Players, Plantations
+
+	# end getPlayers
+	################################################
+
+	################################################
+	# FUNCTION getNextPlantationID(int gameID, int playerID)
+	# returns the next plantation ID which should be assigned
+	def getNextPlantationID(self, gameID, playerID):
+		# Convert this to be a more true "PONY" function
+		plants = Plantation.get(ownerID = (gameID, playerID))
+		if plants is None:
+			return 0
+		else:
+			return max(plants.plantationID)
 
 	################################################
 	# FUNCTION getMove(int id)
@@ -109,7 +154,16 @@ class PRParser:
 		rol = "None"
 		if 'rol_type' in move[0]['args']:
 			rol = move[0]['args']['rol_type']
-			return self.parseRole(move)
+			# if rol == 'craftsman':
+			# 	parseCraftsman(move)
+			# elif rol == 'builder':
+			# 	parseBuilder(move)
+			# elif rol == 'prospector':
+			# 	parseProspector(move)
+			# elif rol == 'settler':
+			# 	parseSettler(move)
+			# elif rol == 'mayor':
+			# 	parseMayor(move)
 		# if there is no role, move does something else (check json keys to figure out)
 
 		# Check move type in conditional
@@ -117,13 +171,8 @@ class PRParser:
 	# end getMove
 	################################################
 
-	################################################
-	# FUNCTION parseRole(json move)
-	# Parses a move which is defined by a role
-	# returns the correct ORM objects
-	def parseRole(self, move):
-		print(len(move))
-		pprint(move[5]['args'])
+	def parseCraftsman(self, move):
+		return ""
 
 # End PRParser class
 ####################################################
@@ -138,3 +187,8 @@ if len(sys.argv) != 2:
 
 # Sample parser instance
 parser = PRParser(sys.argv[1])
+
+# Can modify this statement to check the contents of any tables
+with db_session:
+	Plantation.select().show()
+	Player.select().show()
