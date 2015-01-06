@@ -43,7 +43,7 @@
                                                             'select a '
                                                             'role',
                                        'name': 'playerRoleSelection',
-                                       'possibleactions': ['selectCaptain',
+                                       'possibleactions': ['s-electCaptain',
                                                            'selectTrader',
                                                            'selectSettler',
                                                            'selectCraftsman',
@@ -42734,7 +42734,7 @@
                               'type': 'scoreConditionalPoints',
                               'uid': '5495df59d8d6b'},
                              {'args': [],
-                              'log': "Merci d'avoir joué !",
+                              'log': "Merci d'avoir jouï¿½ !",
                               'time': '21:43',
                               'type': 'endOfGame',
                               'uid': '5495df59d91bd'},
