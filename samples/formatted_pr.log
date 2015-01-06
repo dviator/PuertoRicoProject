@@ -35,7 +35,8 @@
                                        'active_player': '23929116',
                                        'admin_player': '22415481',
                                        'args': None,
-                                       'description': '${actplayer} '
+                                       'de
+                                       scription': '${actplayer} '
                                                       'must select a '
                                                       'role',
                                        'descriptionmyturn': '${you} '

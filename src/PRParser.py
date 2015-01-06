@@ -38,27 +38,33 @@ class TurnTracker:
 
 #####################################################
 # PRParser class
+
 @db_session
 class PRParser:
 
 	#################################################
 	# MEMBER VARIABLES
+	# This description needs to be updated
 	# 	data - JSON data
-	# 	numMoves - total number of moves in the game
+	# 	totalTurns - total number of moves in the game
 	# 	players - list of all players in the game
 	#	numPlayers - number of players in the game
-
-	def __init__(self, data):
-		self.data = data
 
 	def __init__(self, log_name):
 		print("Opening PR JSON log ", log_name, "...")
 		json_data = open(log_name)
 		print("Parsing PR JSON log ", log_name, "...")
 		self.data = json.load(json_data)
-		self.numMoves = len(self.data["data"]["data"])
+		self.totalTurns = len(self.data["data"]["data"])
 		self.game = self.initGame()
 		self.Players, self.Plantations = self.getPlayers()
+		self.active_player = None
+		# Parse all turns
+		# skip set-up turn
+		self.currentTurn = 1
+		while self.currentTurn < self.totalTurns:
+			self.parseMove(self.currentTurn)
+			self.currentTurn += 1
 
 	################################################
 	# FUNCTION initGame()
@@ -81,7 +87,7 @@ class PRParser:
 		# when a player name is repeated, know that that a full governor rotation
 		# is completed
 		players = []
-		for index in range(1, self.numMoves):
+		for index in range(1, self.totalTurns):
 			move = self.getMove(index)
 			index += 1
 			for i in range(0, len(move) - 1):
@@ -127,7 +133,6 @@ class PRParser:
 	# FUNCTION getNextPlantationID(int gameID, int playerID)
 	# returns the next plantation ID which should be assigned
 	def getNextPlantationID(self, gameID, playerID):
-		# Convert this to be a more true "PONY" function
 		plants = Plantation.get(ownerID = (gameID, playerID))
 		if plants is None:
 			return 0
@@ -151,29 +156,53 @@ class PRParser:
 	def parseMove(self, id):
 		move = self.getMove(id)
 		# get the role type if there is one in the move
-		rol = "None"
 		if 'rol_type' in move[0]['args']:
 			rol = move[0]['args']['rol_type']
-			# if rol == 'craftsman':
-			# 	parseCraftsman(move)
-			# elif rol == 'builder':
-			# 	parseBuilder(move)
-			# elif rol == 'prospector':
-			# 	parseProspector(move)
-			# elif rol == 'settler':
-			# 	parseSettler(move)
-			# elif rol == 'mayor':
-			# 	parseMayor(move)
-		# if there is no role, move does something else (check json keys to figure out)
-
-		# Check move type in conditional
-
+			self.active_player = move[0]['args']['player_name']
+			print("Move id " + str(id) + " | Role type " + rol + "| Player " + self.active_player)
+			if rol == 'craftsman':
+				self.parseCraftsman(move)
+			elif rol == 'builder':
+				self.parseBuilder(move)
+			elif rol == 'prospector':
+				self.parseProspector(move)
+			elif rol == 'settler':
+				self.parseSettler(move)
+			elif rol == 'mayor':
+				self.parseMayor(move)
+		# this should be unreachable
+		# all action between role actions should be parsed by that roles parse function
+		else:
+			print("No Role for move " + str(id))
 	# end getMove
 	################################################
+
+	################################################
+	# Role Parsing Functions
 
 	def parseCraftsman(self, move):
 		return ""
 
+	def parseBuilder(self, move):
+		return ""
+
+	def parseProspector(self, move):
+		return ""
+
+	def parseSettler(self, move):
+		return ""
+
+	def parseMayor(self, move):
+		return ""
+
+	def parseCaptain(self, move):
+		return ""
+
+	def parseTrader(self, move):
+		return ""
+
+	# END Role Parsing Functions
+	##################################################
 # End PRParser class
 ####################################################
 
@@ -190,5 +219,7 @@ parser = PRParser(sys.argv[1])
 
 # Can modify this statement to check the contents of any tables
 with db_session:
+	# .show() does a nice pretty print of whatever the contents
+	# of that query object is
 	Plantation.select().show()
 	Player.select().show()
