@@ -12,26 +12,25 @@ from pprint import pprint
 # round - a governor round
 # turn - a player turn in a governor round
 # action - any granular action
-class TurnTracker:
+class TimeTracker:
 
 	def __init__(self, num_players):
-		# Relative counters (i.e. turn resets to 0 at end of round)
+
 		self.num_players = num_players
-		self.round = 0
-		self.turn = 0
-		self.action = 0
+		# Ticks up on every distinct game action/subsequent db write
+		self.eventNum = 0
+		# Cycles once each new governor round
+		self.roundNum = 0
+		# Cycles once each new role phase
+		self.phaseNum = 0
+		# Cycles once each new player turn within a role
+		self.turnNum = 0
 
-		# Absolute counters
-		self.abs_round = 0
-		self.abs_turn = 0
-		self.abs_action = 0
-
-	def inc_action(self):
-		# increment absolute counter
-		self.abs_action += 1
-		self.action += 1
-
-#	def inc_turn(self):
+	# Increments the phase and if necessary increments the round
+	def inc_phase(self):
+		self.phaseNum += 1
+		if self.phaseNum % self.num_players == 0:
+			self.roundNum += 1
 
 # end TurnTracker class
 #####################################################
@@ -61,10 +60,13 @@ class PRParser:
 		self.active_player = None
 		# Parse all turns
 		# skip set-up turn
-		self.currentTurn = 1
-		while self.currentTurn < self.totalTurns:
-			self.parseMove(self.currentTurn)
-			self.currentTurn += 1
+		self.timeTrack = TimeTracker(len(self.Players))
+
+		self.currentMove = 1
+		while self.currentMove < self.totalTurns:
+			self.parseMove(self.currentMove)
+			self.timeTrack.inc_phase()
+			self.currentMove += 1
 
 	################################################
 	# FUNCTION initGame()
@@ -150,6 +152,15 @@ class PRParser:
 	################################################
 
 	################################################
+	# FUNCTION getCurrentMove
+	# Gets the move pointed to by currentMove
+	def getCurrentMove(self):
+		return self.getMove(self.currentMove)
+
+	# end getCurrentMove
+	################################################
+
+	################################################
 	# FUNCTION parseMove(int id)
 	# Parses move number <id> and returns a dictionary of ORM entities
 	# to be accessed/committed to the database
@@ -158,8 +169,8 @@ class PRParser:
 		# get the role type if there is one in the move
 		if 'rol_type' in move[0]['args']:
 			rol = move[0]['args']['rol_type']
-			self.active_player = move[0]['args']['player_name']
-			print("Move id " + str(id) + " | Role type " + rol + "| Player " + self.active_player)
+			active_player = move[0]['args']['player_name']
+			print(active_player + " selected " + rol)
 			if rol == 'craftsman':
 				self.parseCraftsman(move)
 			elif rol == 'builder':
@@ -172,15 +183,43 @@ class PRParser:
 				self.parseMayor(move)
 		# this should be unreachable
 		# all action between role actions should be parsed by that roles parse function
-		else:
-			print("No Role for move " + str(id))
+		#else:
+			#print("No Role for move " + str(id))
 	# end getMove
+	################################################
+
+	################################################
+	# FUNCTION isAction(str args, str action)
+	# Checks if the current move arg is the specified action
+	def isAction(self, args, action):
+		if 'action' in args and args['action'] == action:
+			return True
+		else:
+			return False
+
+	# END FUNCTION isAction
 	################################################
 
 	################################################
 	# Role Parsing Functions
 
 	def parseCraftsman(self, move):
+		moveIndex = 0
+		privelege = 'no'
+		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
+			if 'res_type' in move[moveIndex]['args']:
+				numRes = move[moveIndex]['args']['delta']
+				resType = move[moveIndex]['args']['res_type']
+				activePlayer = move[moveIndex]['args']['player_name']
+				print(activePlayer + " produced " + str(numRes) + " " + resType + ". privelege? " +privelege)
+			elif self.isAction(move[moveIndex]['args'], 'stPlayerCraftsmanPrivilege'):
+				privelege = 'yes'
+			if moveIndex < len(move)-1:
+				moveIndex += 1
+			else:
+				self.currentMove += 1
+				move = self.getCurrentMove()
+				moveIndex = 0
 		return ""
 
 	def parseBuilder(self, move):
@@ -218,8 +257,8 @@ if len(sys.argv) != 2:
 parser = PRParser(sys.argv[1])
 
 # Can modify this statement to check the contents of any tables
-with db_session:
+#with db_session:
 	# .show() does a nice pretty print of whatever the contents
 	# of that query object is
-	Plantation.select().show()
-	Player.select().show()
+	#Plantation.select().show()
+	#Player.select().show()

@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/src/PRParser.py" line="217" />
+    <bookmark url="file://$PROJECT_DIR$/src/PRParser.py" line="256" />
     <bookmark url="file://$PROJECT_DIR$/samples/formatted_pr.log" line="6050" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0cba9d42-4987-4bb1-8ed9-4f7f86ecef2e" name="Default" comment="Updated PRParser, added pony.orm to schemas">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/PRParser.py" afterPath="$PROJECT_DIR$/src/PRParser.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/samples/formatted_pr.log" afterPath="$PROJECT_DIR$/samples/formatted_pr.log" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/schemas.py" afterPath="$PROJECT_DIR$/src/schemas.py" />
     </list>
     <ignored path="PuertoRicoProject.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -37,10 +36,11 @@
           <file leaf-file-name="PRParser.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/src/PRParser.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.9321357" vertical-offset="2967" max-vertical-offset="3910">
-                  <caret line="202" column="0" selection-start-line="202" selection-start-column="0" selection-end-line="202" selection-end-column="0" />
+                <state vertical-scroll-proportion="0.033932135" vertical-offset="2941" max-vertical-offset="4573">
+                  <caret line="174" column="0" selection-start-line="174" selection-start-column="0" selection-end-line="174" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#21#0" expanded="true" />
+                    <marker date="1420600985071" expanded="true" signature="7019:7041" placeholder="..." />
                   </folding>
                 </state>
               </provider>
@@ -85,8 +85,8 @@
           <file leaf-file-name="schemas.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/src/schemas.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.0" vertical-offset="522" max-vertical-offset="1156">
-                  <caret line="34" column="31" selection-start-line="34" selection-start-column="31" selection-end-line="34" selection-end-column="31" />
+                <state vertical-scroll-proportion="0.0" vertical-offset="523" max-vertical-offset="1156">
+                  <caret line="56" column="17" selection-start-line="56" selection-start-column="17" selection-end-line="56" selection-end-column="17" />
                   <folding />
                 </state>
               </provider>
@@ -95,8 +95,8 @@
           <file leaf-file-name="formatted_pr.log" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/samples/formatted_pr.log">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.9239374" vertical-offset="7067" max-vertical-offset="728280">
-                  <caret line="440" column="43" selection-start-line="440" selection-start-column="43" selection-end-line="440" selection-end-column="43" />
+                <state vertical-scroll-proportion="0.03803132" vertical-offset="3077" max-vertical-offset="728280">
+                  <caret line="182" column="0" selection-start-line="182" selection-start-column="0" selection-end-line="182" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
@@ -116,9 +116,9 @@
         <option value="$PROJECT_DIR$/src/BGArenaScraper.py" />
         <option value="$PROJECT_DIR$/samples/puerto_rico_m1.log" />
         <option value="$PROJECT_DIR$/src/dbWriter.py" />
+        <option value="$PROJECT_DIR$/samples/formatted_pr.log" />
         <option value="$PROJECT_DIR$/src/schemas.py" />
         <option value="$PROJECT_DIR$/src/PRParser.py" />
-        <option value="$PROJECT_DIR$/samples/formatted_pr.log" />
       </list>
     </option>
   </component>
@@ -534,8 +534,8 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/src/PRParser.py</url>
-          <line>156</line>
-          <option name="timeStamp" value="11" />
+          <line>206</line>
+          <option name="timeStamp" value="13" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -543,21 +543,67 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="12" />
+      <option name="time" value="15" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
-        <watch expression="move[i]" language="Python" />
+        <watch expression="len(move)" language="Python" />
       </configuration>
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/src/PRParser.py">
       <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="2967" max-vertical-offset="3910">
+          <caret line="202" column="0" selection-start-line="202" selection-start-column="0" selection-end-line="202" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#21#0" expanded="true" />
+            <marker date="1420600985071" expanded="true" signature="7019:7041" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/dbWriter.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="119" max-vertical-offset="391">
+          <caret line="7" column="19" selection-start-line="7" selection-start-column="19" selection-end-line="7" selection-end-column="19" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/BGArenaScraper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="272" max-vertical-offset="374">
+          <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/schemas.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="522" max-vertical-offset="1156">
+          <caret line="34" column="31" selection-start-line="34" selection-start-column="31" selection-end-line="34" selection-end-column="31" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/samples/formatted_pr.log">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="100">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/PRParser.py">
+      <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3383">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
+            <marker date="1420600985071" expanded="true" signature="7019:7041" placeholder="..." />
           </folding>
         </state>
       </provider>
@@ -602,6 +648,7 @@
           <caret line="35" column="0" selection-start-line="35" selection-start-column="0" selection-end-line="35" selection-end-column="0" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
+            <marker date="1420600985071" expanded="true" signature="7019:7041" placeholder="..." />
           </folding>
         </state>
       </provider>
@@ -653,6 +700,7 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
+            <marker date="1420600985071" expanded="true" signature="7019:7041" placeholder="..." />
           </folding>
         </state>
       </provider>
@@ -704,6 +752,7 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
+            <marker date="1420600985071" expanded="true" signature="7019:7041" placeholder="..." />
           </folding>
         </state>
       </provider>
@@ -755,6 +804,7 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
+            <marker date="1420600985071" expanded="true" signature="7019:7041" placeholder="..." />
           </folding>
         </state>
       </provider>
@@ -779,13 +829,6 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="391">
           <caret line="7" column="19" selection-start-line="7" selection-start-column="19" selection-end-line="7" selection-end-column="19" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_imps/_pydev_execfile.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.7197802" vertical-offset="27" max-vertical-offset="391">
-          <caret line="17" column="0" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
         </state>
       </provider>
     </entry>
@@ -820,21 +863,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://C:/Python34/Lib/site-packages/pony/orm/core.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.33241758" vertical-offset="22523" max-vertical-offset="79900">
-          <caret line="1359" column="0" selection-start-line="1359" selection-start-column="0" selection-end-line="1359" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://C:/Python34/Lib/site-packages/pony/utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.33241758" vertical-offset="763" max-vertical-offset="5372">
-          <caret line="64" column="0" selection-start-line="64" selection-start-column="0" selection-end-line="64" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/schemas.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="561" max-vertical-offset="1156">
@@ -843,20 +871,45 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_imps/_pydev_execfile.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="501">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/samples/formatted_pr.log">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.9239374" vertical-offset="7067" max-vertical-offset="728280">
-          <caret line="440" column="43" selection-start-line="440" selection-start-column="43" selection-end-line="440" selection-end-column="43" />
+        <state vertical-scroll-proportion="0.03803132" vertical-offset="3077" max-vertical-offset="728280">
+          <caret line="182" column="0" selection-start-line="182" selection-start-column="0" selection-end-line="182" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Python34/Lib/site-packages/pony/orm/core.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.33333334" vertical-offset="5300" max-vertical-offset="79900">
+          <caret line="348" column="0" selection-start-line="348" selection-start-column="0" selection-end-line="348" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Python34/Lib/site-packages/pony/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="353" max-vertical-offset="5372">
+          <caret line="42" column="0" selection-start-line="42" selection-start-column="0" selection-end-line="43" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/PRParser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.9321357" vertical-offset="2967" max-vertical-offset="3910">
-          <caret line="202" column="0" selection-start-line="202" selection-start-column="0" selection-end-line="202" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.033932135" vertical-offset="2941" max-vertical-offset="4573">
+          <caret line="174" column="0" selection-start-line="174" selection-start-column="0" selection-end-line="174" selection-end-column="0" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
+            <marker date="1420600985071" expanded="true" signature="7019:7041" placeholder="..." />
           </folding>
         </state>
       </provider>
