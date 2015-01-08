@@ -181,6 +181,10 @@ class PRParser:
 				self.parseSettler(move)
 			elif rol == 'mayor':
 				self.parseMayor(move)
+			elif rol == 'captain':
+				self.parseCaptain(move)
+			elif rol == 'trader':
+				self.parseTrader(move)
 		# this should be unreachable
 		# all action between role actions should be parsed by that roles parse function
 		#else:
@@ -201,31 +205,73 @@ class PRParser:
 	################################################
 
 	################################################
+	# FUNCTION incMoveIndex(int moveIndex, str move)
+	# increments the move index and returns the new
+	# tuple (move, moveIndex)
+	def incMoveIndex(self, move, moveIndex):
+		if moveIndex < len(move)-1:
+			moveIndex += 1
+		else:
+			self.currentMove += 1
+			move = self.getCurrentMove()
+			moveIndex = 0
+		return move, moveIndex
+
+	# END FUNCTION incMoveIndex
+	################################################
+
+	################################################
 	# Role Parsing Functions
 
 	def parseCraftsman(self, move):
 		moveIndex = 0
-		privelege = 'no'
+		privilege = 'no'
 		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
 			if 'res_type' in move[moveIndex]['args']:
 				numRes = move[moveIndex]['args']['delta']
 				resType = move[moveIndex]['args']['res_type']
 				activePlayer = move[moveIndex]['args']['player_name']
-				print(activePlayer + " produced " + str(numRes) + " " + resType + ". privelege? " +privelege)
+				print(activePlayer + " produced " + str(numRes) + " " + resType + ". privilege? " +privilege)
 			elif self.isAction(move[moveIndex]['args'], 'stPlayerCraftsmanPrivilege'):
-				privelege = 'yes'
-			if moveIndex < len(move)-1:
-				moveIndex += 1
-			else:
-				self.currentMove += 1
-				move = self.getCurrentMove()
-				moveIndex = 0
+				privilege = 'yes'
+			if 'type' in move[moveIndex]:
+				if move[moveIndex]['type'] == 'doubloonsEarned':
+					doubloons = move[moveIndex]['args']['delta']
+					activePlayer = move[moveIndex]['args']['player_name']
+					if 'factory' in move[moveIndex]['log']:
+						print(activePlayer + " earned " + str(doubloons) + " doubloons from his factory")
+					else:
+						print(activePlayer + " earned " + str(doubloons) + " doubloons from the craftsman")
+			move, moveIndex = self.incMoveIndex(move, moveIndex)
 		return ""
 
+	# TODO : Add in University action handling
 	def parseBuilder(self, move):
+		moveIndex = 0
+		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
+			if 'bld_type_tr' in move[moveIndex]['args']:
+				bld_type = move[moveIndex]['args']['bld_type_tr']
+				cost = move[moveIndex]['args']['cost']
+				score_delta = move[moveIndex]['args']['score_delta']
+				activePlayer = move[moveIndex]['args']['player_name']
+				print(activePlayer + " built " + bld_type + " for " + str(cost) + " doubloon, gaining " + score_delta + " victory points")
+			if 'type' in move[moveIndex]:
+				if move[moveIndex]['type'] == 'doubloonsEarned':
+					doubloons = move[moveIndex]['args']['delta']
+					activePlayer = move[moveIndex]['args']['player_name']
+					print(activePlayer + " earned " + str(doubloons) + " doubloons from the builder")
+			move, moveIndex = self.incMoveIndex(move, moveIndex)
 		return ""
 
 	def parseProspector(self, move):
+		moveIndex = 0
+		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
+			if 'type' in move[moveIndex]:
+				if move[moveIndex]['type'] == 'doubloonsEarned':
+					doubloons = move[moveIndex]['args']['delta']
+					activePlayer = move[moveIndex]['args']['player_name']
+					print(activePlayer + " earned " + str(doubloons) + " doubloons from the prospector.")
+			move, moveIndex = self.incMoveIndex(move, moveIndex)
 		return ""
 
 	def parseSettler(self, move):
