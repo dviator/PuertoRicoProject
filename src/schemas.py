@@ -58,6 +58,6 @@ class Ships(db.Entity):
 	CropNum = Required(int)
 
 # TURN ON DEBUGGING
-sql_debug(True)
+sql_debug(False)
 
 db.generate_mapping(create_tables=True)

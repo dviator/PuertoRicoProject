@@ -7263,7 +7263,7 @@
                               'log': '${player_name} sets a colonist to '
                                      'work in his plantation',
                               'time': '21:17',
-                              'type': 'colonistToPlantation',
+                                  'type': 'colonistToPlantation',
                               'uid': '5495d976c27f4'}],
                     'move_id': '45',
                     'packet_id': '53',

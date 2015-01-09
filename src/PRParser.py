@@ -221,29 +221,34 @@ class PRParser:
 	################################################
 
 	################################################
+	# FUNCTION doubloonsEarned(move, moveIndex)
+	# checks if coins were earned by a particular move
+	def doubloonsEarned(self, move, moveIndex, role):
+		if 'type' in move[moveIndex]:
+			if move[moveIndex]['type'] == 'doubloonsEarned':
+				doubloons = move[moveIndex]['args']['delta']
+				activePlayer = move[moveIndex]['args']['player_name']
+				if 'factory' in move[moveIndex]['log']:
+					print(activePlayer + " earned " + str(doubloons) + " doubloons from his factory")
+				else:
+					print(activePlayer + " earned " + str(doubloons) + " doubloons from the "+ role)
+
+	################################################
 	# Role Parsing Functions
 
 	def parseCraftsman(self, move):
 		moveIndex = 0
-		privilege = 'no'
+		privilege = False
 		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
 			if 'res_type' in move[moveIndex]['args']:
 				numRes = move[moveIndex]['args']['delta']
 				resType = move[moveIndex]['args']['res_type']
 				activePlayer = move[moveIndex]['args']['player_name']
-				print(activePlayer + " produced " + str(numRes) + " " + resType + ". privilege? " +privilege)
+				print(activePlayer + " produced " + str(numRes) + " " + resType + ". privilege? " + str(privilege))
 			elif self.isAction(move[moveIndex]['args'], 'stPlayerCraftsmanPrivilege'):
-				privilege = 'yes'
-			if 'type' in move[moveIndex]:
-				if move[moveIndex]['type'] == 'doubloonsEarned':
-					doubloons = move[moveIndex]['args']['delta']
-					activePlayer = move[moveIndex]['args']['player_name']
-					if 'factory' in move[moveIndex]['log']:
-						print(activePlayer + " earned " + str(doubloons) + " doubloons from his factory")
-					else:
-						print(activePlayer + " earned " + str(doubloons) + " doubloons from the craftsman")
+				privilege = True
+			self.doubloonsEarned(move, moveIndex, "craftsman")
 			move, moveIndex = self.incMoveIndex(move, moveIndex)
-		return ""
 
 	# TODO : Add in University action handling
 	def parseBuilder(self, move):
@@ -254,14 +259,11 @@ class PRParser:
 				cost = move[moveIndex]['args']['cost']
 				score_delta = move[moveIndex]['args']['score_delta']
 				activePlayer = move[moveIndex]['args']['player_name']
-				print(activePlayer + " built " + bld_type + " for " + str(cost) + " doubloon, gaining " + score_delta + " victory points")
-			if 'type' in move[moveIndex]:
-				if move[moveIndex]['type'] == 'doubloonsEarned':
-					doubloons = move[moveIndex]['args']['delta']
-					activePlayer = move[moveIndex]['args']['player_name']
-					print(activePlayer + " earned " + str(doubloons) + " doubloons from the builder")
+				# Need to keep track of same bld id for settler
+				building_id = move[moveIndex]['args']['bld_id']
+				print(activePlayer + " built " + bld_type + " (bld_id: " + building_id + ")  for " + str(cost) + " doubloon, gaining " + score_delta + " victory points")
+			self.doubloonsEarned(move, moveIndex, "builder")
 			move, moveIndex = self.incMoveIndex(move, moveIndex)
-		return ""
 
 	def parseProspector(self, move):
 		moveIndex = 0
@@ -271,17 +273,76 @@ class PRParser:
 					doubloons = move[moveIndex]['args']['delta']
 					activePlayer = move[moveIndex]['args']['player_name']
 					print(activePlayer + " earned " + str(doubloons) + " doubloons from the prospector.")
+			self.doubloonsEarned(move, moveIndex, "builder")
 			move, moveIndex = self.incMoveIndex(move, moveIndex)
-		return ""
 
 	def parseSettler(self, move):
-		return ""
+		moveIndex = 0
+		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
+			if 'res_type' in move[moveIndex]['args']:
+				plantation_type = move[moveIndex]['args']['res_type']
+				activePlayer = move[moveIndex]['args']['player_name']
+				# Need to keep track of same plantation id for placing colonists
+				plantation_id = move[moveIndex]['args']['pla_id']
+				# Quarry is rock lol
+				print(activePlayer + " chose a " + plantation_type + " plantation (pla_id: "+ plantation_id +")")
+			#if self.isAction(move[moveIndex]['args'], 'stPlayerSettlerHacienda'):
+			#if self.isAction(move[moveIndex]['args'], 'stPlayerSettlerHospice'):
+			self.doubloonsEarned(move, moveIndex, "settler")
+			move, moveIndex = self.incMoveIndex(move, moveIndex)
 
 	def parseMayor(self, move):
-		return ""
+		moveIndex = 0
+		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
+			if 'type' in move[moveIndex]:
+				moveType = move[moveIndex]['type']
+				if 'player_name' in move[moveIndex]['args']:
+					activePlayer = move[moveIndex]['args']['player_name']
+				if 'delta' in move[moveIndex]['args']:
+					colonist_delta = move[moveIndex]['args']['delta']
+				if moveType == 'colonistsEarnedFromSupply':
+					print(activePlayer + " takes " + str(colonist_delta) + " colonist from the supply as his privilege")
+				elif moveType == 'colonistsEarnedFromShip':
+					print(activePlayer + " takes " + str(colonist_delta) + " colonist from the ship")
+				elif moveType == 'colonistToBuilding':
+					building_id = move[moveIndex]['args']['bld_id']
+					print(activePlayer + " moves " + str(colonist_delta) + " colonist to building " + building_id)
+				elif moveType == 'colonistToPlantation':
+					plantation_id = move[moveIndex]['args']['pla_id']
+					print(activePlayer + " moves " + str(colonist_delta) + " colonist to plantation " + plantation_id)
+			self.doubloonsEarned(move, moveIndex, "mayor")
+			move, moveIndex = self.incMoveIndex(move, moveIndex)
 
 	def parseCaptain(self, move):
-		return ""
+		moveIndex = 0
+		privilege = False
+		harbor = False
+		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
+			if 'type' in move[moveIndex]:
+				moveType = move[moveIndex]['type']
+				if 'player_name' in move[moveIndex]['args']:
+					activePlayer = move[moveIndex]['args']['player_name']
+				if moveType == 'selectShip':
+					shipCapacity = move[moveIndex]['args']['capacity']
+					shipId = move[moveIndex]['args']['shp_id']
+					print(activePlayer + " selected the " + shipCapacity + " barrel ship (shp_id: " + shipId + ")")
+				elif moveType == 'goodsShipped':
+					res_type = move[moveIndex]['args']['res_type']
+					shipId = move[moveIndex]['args']['shp_id']
+					num_goods = move[moveIndex]['args']['delta']
+					print(activePlayer + " shipped " + str(num_goods) + " " + res_type + " on ship " + str(shipId))
+				elif moveType == 'victoryPointsEarned':
+					num_victory = move[moveIndex]['args']['delta']
+					if 'privilege' in move[moveIndex]['log']:
+						privilege = True
+						print(activePlayer + " recieved " + str(num_victory) + " vp from their privilege")
+					elif 'harbor' in move[moveIndex]['log']:
+						harbor = True
+						print(activePlayer + " recieved " + str(num_victory) + " vp from their harbor")
+					else:
+						print(activePlayer + " recieved " + str(num_victory) + " vp for shipping goods")
+			self.doubloonsEarned(move, moveIndex, "captain")
+			move, moveIndex = self.incMoveIndex(move, moveIndex)
 
 	def parseTrader(self, move):
 		return ""
