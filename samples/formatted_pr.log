@@ -35,7 +35,8 @@
                                        'active_player': '23929116',
                                        'admin_player': '22415481',
                                        'args': None,
-                                       'description': '${actplayer} '
+                                       'de
+                                       scription': '${actplayer} '
                                                       'must select a '
                                                       'role',
                                        'descriptionmyturn': '${you} '
@@ -7262,7 +7263,7 @@
                               'log': '${player_name} sets a colonist to '
                                      'work in his plantation',
                               'time': '21:17',
-                              'type': 'colonistToPlantation',
+                                  'type': 'colonistToPlantation',
                               'uid': '5495d976c27f4'}],
                     'move_id': '45',
                     'packet_id': '53',

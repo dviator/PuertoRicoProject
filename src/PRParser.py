@@ -12,53 +12,61 @@ from pprint import pprint
 # round - a governor round
 # turn - a player turn in a governor round
 # action - any granular action
-class TurnTracker:
+class TimeTracker:
 
 	def __init__(self, num_players):
-		# Relative counters (i.e. turn resets to 0 at end of round)
+
 		self.num_players = num_players
-		self.round = 0
-		self.turn = 0
-		self.action = 0
+		# Ticks up on every distinct game action/subsequent db write
+		self.eventNum = 0
+		# Cycles once each new governor round
+		self.roundNum = 0
+		# Cycles once each new role phase
+		self.phaseNum = 0
+		# Cycles once each new player turn within a role
+		self.turnNum = 0
 
-		# Absolute counters
-		self.abs_round = 0
-		self.abs_turn = 0
-		self.abs_action = 0
-
-	def inc_action(self):
-		# increment absolute counter
-		self.abs_action += 1
-		self.action += 1
-
-#	def inc_turn(self):
+	# Increments the phase and if necessary increments the round
+	def inc_phase(self):
+		self.phaseNum += 1
+		if self.phaseNum % self.num_players == 0:
+			self.roundNum += 1
 
 # end TurnTracker class
 #####################################################
 
 #####################################################
 # PRParser class
+
 @db_session
 class PRParser:
 
 	#################################################
 	# MEMBER VARIABLES
+	# This description needs to be updated
 	# 	data - JSON data
-	# 	numMoves - total number of moves in the game
+	# 	totalTurns - total number of moves in the game
 	# 	players - list of all players in the game
 	#	numPlayers - number of players in the game
-
-	def __init__(self, data):
-		self.data = data
 
 	def __init__(self, log_name):
 		print("Opening PR JSON log ", log_name, "...")
 		json_data = open(log_name)
 		print("Parsing PR JSON log ", log_name, "...")
 		self.data = json.load(json_data)
-		self.numMoves = len(self.data["data"]["data"])
+		self.totalTurns = len(self.data["data"]["data"])
 		self.game = self.initGame()
 		self.Players, self.Plantations = self.getPlayers()
+		self.active_player = None
+		# Parse all turns
+		# skip set-up turn
+		self.timeTrack = TimeTracker(len(self.Players))
+
+		self.currentMove = 1
+		while self.currentMove < self.totalTurns:
+			self.parseMove(self.currentMove)
+			self.timeTrack.inc_phase()
+			self.currentMove += 1
 
 	################################################
 	# FUNCTION initGame()
@@ -81,7 +89,7 @@ class PRParser:
 		# when a player name is repeated, know that that a full governor rotation
 		# is completed
 		players = []
-		for index in range(1, self.numMoves):
+		for index in range(1, self.totalTurns):
 			move = self.getMove(index)
 			index += 1
 			for i in range(0, len(move) - 1):
@@ -127,7 +135,6 @@ class PRParser:
 	# FUNCTION getNextPlantationID(int gameID, int playerID)
 	# returns the next plantation ID which should be assigned
 	def getNextPlantationID(self, gameID, playerID):
-		# Convert this to be a more true "PONY" function
 		plants = Plantation.get(ownerID = (gameID, playerID))
 		if plants is None:
 			return 0
@@ -145,35 +152,203 @@ class PRParser:
 	################################################
 
 	################################################
+	# FUNCTION getCurrentMove
+	# Gets the move pointed to by currentMove
+	def getCurrentMove(self):
+		return self.getMove(self.currentMove)
+
+	# end getCurrentMove
+	################################################
+
+	################################################
 	# FUNCTION parseMove(int id)
 	# Parses move number <id> and returns a dictionary of ORM entities
 	# to be accessed/committed to the database
 	def parseMove(self, id):
 		move = self.getMove(id)
 		# get the role type if there is one in the move
-		rol = "None"
 		if 'rol_type' in move[0]['args']:
 			rol = move[0]['args']['rol_type']
-			# if rol == 'craftsman':
-			# 	parseCraftsman(move)
-			# elif rol == 'builder':
-			# 	parseBuilder(move)
-			# elif rol == 'prospector':
-			# 	parseProspector(move)
-			# elif rol == 'settler':
-			# 	parseSettler(move)
-			# elif rol == 'mayor':
-			# 	parseMayor(move)
-		# if there is no role, move does something else (check json keys to figure out)
-
-		# Check move type in conditional
-
+			active_player = move[0]['args']['player_name']
+			print(active_player + " selected " + rol)
+			if rol == 'craftsman':
+				self.parseCraftsman(move)
+			elif rol == 'builder':
+				self.parseBuilder(move)
+			elif rol == 'prospector':
+				self.parseProspector(move)
+			elif rol == 'settler':
+				self.parseSettler(move)
+			elif rol == 'mayor':
+				self.parseMayor(move)
+			elif rol == 'captain':
+				self.parseCaptain(move)
+			elif rol == 'trader':
+				self.parseTrader(move)
+		# this should be unreachable
+		# all action between role actions should be parsed by that roles parse function
+		#else:
+			#print("No Role for move " + str(id))
 	# end getMove
 	################################################
 
+	################################################
+	# FUNCTION isAction(str args, str action)
+	# Checks if the current move arg is the specified action
+	def isAction(self, args, action):
+		if 'action' in args and args['action'] == action:
+			return True
+		else:
+			return False
+
+	# END FUNCTION isAction
+	################################################
+
+	################################################
+	# FUNCTION incMoveIndex(int moveIndex, str move)
+	# increments the move index and returns the new
+	# tuple (move, moveIndex)
+	def incMoveIndex(self, move, moveIndex):
+		if moveIndex < len(move)-1:
+			moveIndex += 1
+		else:
+			self.currentMove += 1
+			move = self.getCurrentMove()
+			moveIndex = 0
+		return move, moveIndex
+
+	# END FUNCTION incMoveIndex
+	################################################
+
+	################################################
+	# FUNCTION doubloonsEarned(move, moveIndex)
+	# checks if coins were earned by a particular move
+	def doubloonsEarned(self, move, moveIndex, role):
+		if 'type' in move[moveIndex]:
+			if move[moveIndex]['type'] == 'doubloonsEarned':
+				doubloons = move[moveIndex]['args']['delta']
+				activePlayer = move[moveIndex]['args']['player_name']
+				if 'factory' in move[moveIndex]['log']:
+					print(activePlayer + " earned " + str(doubloons) + " doubloons from his factory")
+				else:
+					print(activePlayer + " earned " + str(doubloons) + " doubloons from the "+ role)
+
+	################################################
+	# Role Parsing Functions
+
 	def parseCraftsman(self, move):
+		moveIndex = 0
+		privilege = False
+		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
+			if 'res_type' in move[moveIndex]['args']:
+				numRes = move[moveIndex]['args']['delta']
+				resType = move[moveIndex]['args']['res_type']
+				activePlayer = move[moveIndex]['args']['player_name']
+				print(activePlayer + " produced " + str(numRes) + " " + resType + ". privilege? " + str(privilege))
+			elif self.isAction(move[moveIndex]['args'], 'stPlayerCraftsmanPrivilege'):
+				privilege = True
+			self.doubloonsEarned(move, moveIndex, "craftsman")
+			move, moveIndex = self.incMoveIndex(move, moveIndex)
+
+	# TODO : Add in University action handling
+	def parseBuilder(self, move):
+		moveIndex = 0
+		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
+			if 'bld_type_tr' in move[moveIndex]['args']:
+				bld_type = move[moveIndex]['args']['bld_type_tr']
+				cost = move[moveIndex]['args']['cost']
+				score_delta = move[moveIndex]['args']['score_delta']
+				activePlayer = move[moveIndex]['args']['player_name']
+				# Need to keep track of same bld id for settler
+				building_id = move[moveIndex]['args']['bld_id']
+				print(activePlayer + " built " + bld_type + " (bld_id: " + building_id + ")  for " + str(cost) + " doubloon, gaining " + score_delta + " victory points")
+			self.doubloonsEarned(move, moveIndex, "builder")
+			move, moveIndex = self.incMoveIndex(move, moveIndex)
+
+	def parseProspector(self, move):
+		moveIndex = 0
+		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
+			if 'type' in move[moveIndex]:
+				if move[moveIndex]['type'] == 'doubloonsEarned':
+					doubloons = move[moveIndex]['args']['delta']
+					activePlayer = move[moveIndex]['args']['player_name']
+					print(activePlayer + " earned " + str(doubloons) + " doubloons from the prospector.")
+			self.doubloonsEarned(move, moveIndex, "builder")
+			move, moveIndex = self.incMoveIndex(move, moveIndex)
+
+	def parseSettler(self, move):
+		moveIndex = 0
+		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
+			if 'res_type' in move[moveIndex]['args']:
+				plantation_type = move[moveIndex]['args']['res_type']
+				activePlayer = move[moveIndex]['args']['player_name']
+				# Need to keep track of same plantation id for placing colonists
+				plantation_id = move[moveIndex]['args']['pla_id']
+				# Quarry is rock lol
+				print(activePlayer + " chose a " + plantation_type + " plantation (pla_id: "+ plantation_id +")")
+			#if self.isAction(move[moveIndex]['args'], 'stPlayerSettlerHacienda'):
+			#if self.isAction(move[moveIndex]['args'], 'stPlayerSettlerHospice'):
+			self.doubloonsEarned(move, moveIndex, "settler")
+			move, moveIndex = self.incMoveIndex(move, moveIndex)
+
+	def parseMayor(self, move):
+		moveIndex = 0
+		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
+			if 'type' in move[moveIndex]:
+				moveType = move[moveIndex]['type']
+				if 'player_name' in move[moveIndex]['args']:
+					activePlayer = move[moveIndex]['args']['player_name']
+				if 'delta' in move[moveIndex]['args']:
+					colonist_delta = move[moveIndex]['args']['delta']
+				if moveType == 'colonistsEarnedFromSupply':
+					print(activePlayer + " takes " + str(colonist_delta) + " colonist from the supply as his privilege")
+				elif moveType == 'colonistsEarnedFromShip':
+					print(activePlayer + " takes " + str(colonist_delta) + " colonist from the ship")
+				elif moveType == 'colonistToBuilding':
+					building_id = move[moveIndex]['args']['bld_id']
+					print(activePlayer + " moves " + str(colonist_delta) + " colonist to building " + building_id)
+				elif moveType == 'colonistToPlantation':
+					plantation_id = move[moveIndex]['args']['pla_id']
+					print(activePlayer + " moves " + str(colonist_delta) + " colonist to plantation " + plantation_id)
+			self.doubloonsEarned(move, moveIndex, "mayor")
+			move, moveIndex = self.incMoveIndex(move, moveIndex)
+
+	def parseCaptain(self, move):
+		moveIndex = 0
+		privilege = False
+		harbor = False
+		while not self.isAction(move[moveIndex]['args'], 'stNextPlayerForRoleSelection'):
+			if 'type' in move[moveIndex]:
+				moveType = move[moveIndex]['type']
+				if 'player_name' in move[moveIndex]['args']:
+					activePlayer = move[moveIndex]['args']['player_name']
+				if moveType == 'selectShip':
+					shipCapacity = move[moveIndex]['args']['capacity']
+					shipId = move[moveIndex]['args']['shp_id']
+					print(activePlayer + " selected the " + shipCapacity + " barrel ship (shp_id: " + shipId + ")")
+				elif moveType == 'goodsShipped':
+					res_type = move[moveIndex]['args']['res_type']
+					shipId = move[moveIndex]['args']['shp_id']
+					num_goods = move[moveIndex]['args']['delta']
+					print(activePlayer + " shipped " + str(num_goods) + " " + res_type + " on ship " + str(shipId))
+				elif moveType == 'victoryPointsEarned':
+					num_victory = move[moveIndex]['args']['delta']
+					if 'privilege' in move[moveIndex]['log']:
+						privilege = True
+						print(activePlayer + " recieved " + str(num_victory) + " vp from their privilege")
+					elif 'harbor' in move[moveIndex]['log']:
+						harbor = True
+						print(activePlayer + " recieved " + str(num_victory) + " vp from their harbor")
+					else:
+						print(activePlayer + " recieved " + str(num_victory) + " vp for shipping goods")
+			self.doubloonsEarned(move, moveIndex, "captain")
+			move, moveIndex = self.incMoveIndex(move, moveIndex)
+
+	def parseTrader(self, move):
 		return ""
 
+	# END Role Parsing Functions
+	##################################################
 # End PRParser class
 ####################################################
 
@@ -189,6 +364,8 @@ if len(sys.argv) != 2:
 parser = PRParser(sys.argv[1])
 
 # Can modify this statement to check the contents of any tables
-with db_session:
-	Plantation.select().show()
-	Player.select().show()
+#with db_session:
+	# .show() does a nice pretty print of whatever the contents
+	# of that query object is
+	#Plantation.select().show()
+	#Player.select().show()

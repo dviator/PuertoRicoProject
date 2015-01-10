@@ -88,6 +88,6 @@ class Ships(db.Entity):
 #class TradingHouse(db.Entity):
 
 # TURN ON DEBUGGING
-sql_debug(True)
+sql_debug(False)
 
 db.generate_mapping(create_tables=True)
