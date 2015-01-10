@@ -17,10 +17,11 @@ class Game(db.Entity):
 	Players = Set("Player")
 	Ships = Set("Ships")
 
-#Moving this here may simplify things a bit
+
 class Player(db.Entity):
 	gameID = Required(Game)
 	playerID = Required(int)
+	Turn = Set("Turn")
 	playerName = Required(str)
 	colonists = Required(int)
 	victoryPoints = Required(int)
@@ -32,16 +33,15 @@ class Player(db.Entity):
 	SugarOwned = Required(int)
 	TobaccoOwned = Required(int)
 	CoffeeOwned = Required(int)
-	#These reverses are causing an error when i run, haven't figured them out and I have to run.
-	Turn = Set("Turn", reverse="ActivePlayer")
 	Buildings = Set("Building")
 	Plantations = Set("Plantation")
-	PrimaryKey(gameID, playerID)
+	PrimaryKey(gameID,playerID)
 
 class Turn(db.Entity):
 	gameID = Required(Game)
+	ActivePlayer = Required(Player)
 	#Ticks up on every distinct game action/subsequent db write
-	EventNum = PrimaryKey(int)
+	EventNum = Required(int)
 	#Cycles once each new governor round
 	RoundNum = Required(int)
 	#Cycles once each new role phase
@@ -50,9 +50,10 @@ class Turn(db.Entity):
 	TurnNum = Required(int)
 	EventType = str
 	Action = str
-	#The other reverses to fix, sorry!
-	Governor = Required(Player, reverse="playerName")
-	ActivePlayer = Required(Player, reverse="playerName")
+	Ships = Set("Ships")
+	#Governor = Required(Player, reverse="playerName")
+	PrimaryKey(gameID,EventNum)
+	
 
 # Game id is included in ownerID Foreign key
 #Good call, I read this as I was wondering that exact thing.
@@ -60,8 +61,7 @@ class Building(db.Entity):
 	ownerID = Required(Player)
 	buildingID = Required(int)
 	activated = Required(bool)
-	Turn = Required(Turn)
-	PrimaryKey(ownerID, buildingID, Turn)
+	PrimaryKey(ownerID,buildingID)
 	
 	#I think we need to put the turn as a foreign key or we cannot track changes to the building throughout the game.
 	#It also has to be a part of the primary key, otherwise activate -> deactivate will lead to a non unique PK
@@ -71,9 +71,8 @@ class Plantation(db.Entity):
 	plantationID = Required(int)
 	plantationType = Required(str)
 	activated = Required(bool)
-	Turn = Required(Turn)
-	PrimaryKey(ownerID, plantationID, Turn)
-	
+	PrimaryKey(ownerID,plantationID)
+
 
 class Ships(db.Entity):
 	gameID = Required(Game)
@@ -82,7 +81,7 @@ class Ships(db.Entity):
 	CropType = str
 	CropNum = int
 	Turn = Required(Turn)
-	PrimaryKey(gameID, shipID, Turn)
+	PrimaryKey(gameID,shipID,Turn)
 
 #Not ready to flesh out yet but I'm sure we'll need it. 
 #class TradingHouse(db.Entity):
