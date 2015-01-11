@@ -349,6 +349,16 @@ class PRParser:
 
 	# END Role Parsing Functions
 	##################################################
+
+#Players.append(Player(gameID = self.game.gameID, playerID = player_num, playerName = player,
+	#colonists = 0, victoryPoints = 0, Doubloons = numDubloons))
+#Plantations.append(Plantation(ownerID = (self.game.gameID, player_num), plantationID = self.getNextPlantationID(self.game.gameID, player_num),
+	#plantationType = plantation, activated = False))
+	# FUNCTION Update Player Entity
+
+	#def updatePlayer(self, gameID, playerID, playerName, colonists):
+		#return ""
+
 # End PRParser class
 ####################################################
 
