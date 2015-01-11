@@ -2,10 +2,16 @@ from pony.orm import *
 import os
 
 
+print(os.getcwd())
 ## Delete created database
 #Check if database exists first.
-if os.path.isfile("sqlite.db"):
+#Make sure your working directory is insde \src or this will not
+#Delete the db correctly.
+if os.path.isfile(".\sqlite.db"):
+	print("Deleting existing sqlite.db file")
 	os.remove("sqlite.db")
+
+
 db = Database("sqlite", "sqlite.db", create_db=True)
 
 class Game(db.Entity):
@@ -16,6 +22,7 @@ class Game(db.Entity):
 	Turns = Set("Turn")
 	Players = Set("Player")
 	Ships = Set("Ships")
+	TradingHouse = Set("TradingHouse")
 
 
 class Player(db.Entity):
@@ -23,16 +30,16 @@ class Player(db.Entity):
 	playerID = Required(int)
 	Turn = Set("Turn")
 	playerName = Required(str)
-	colonists = Required(int)
-	victoryPoints = Required(int)
-	Doubloons = Required(int)
+	colonists = Required(int, default=0)
+	victoryPoints = Required(int, default=0)
+	Doubloons = Required(int, default=0)
 	#Implementing crops as an attribute since there is nothing unique about each crop aside from it's type. Craftsman/Captain can be handled with arithmetic.
 	#Crop Total/running out of crops is likely handled by internal game logic/is constant
-	CornOwned = Required(int)
-	IndigoOwned = Required(int)
-	SugarOwned = Required(int)
-	TobaccoOwned = Required(int)
-	CoffeeOwned = Required(int)
+	CornOwned = Required(int, default=0)
+	IndigoOwned = Required(int, default=0)
+	SugarOwned = Required(int, default=0)
+	TobaccoOwned = Required(int, default=0)
+	CoffeeOwned = Required(int, default=0)
 	Buildings = Set("Building")
 	Plantations = Set("Plantation")
 	PrimaryKey(gameID,playerID)
@@ -51,26 +58,30 @@ class Turn(db.Entity):
 	EventType = str
 	Action = str
 	Ships = Set("Ships")
+	Building = Set("Building")
+	Plantation = Set("Plantation")
+	TradingHouse = Set("TradingHouse")
 	#Governor = Required(Player, reverse="playerName")
 	PrimaryKey(gameID,EventNum)
 	
 
 # Game id is included in ownerID Foreign key
-#Good call, I read this as I was wondering that exact thing.
 class Building(db.Entity):
 	ownerID = Required(Player)
 	buildingID = Required(int)
-	activated = Required(bool)
+	Turn = Required(Turn)
+	activated = Required(bool, default=False)
 	PrimaryKey(ownerID,buildingID)
 	
-	#I think we need to put the turn as a foreign key or we cannot track changes to the building throughout the game.
-	#It also has to be a part of the primary key, otherwise activate -> deactivate will lead to a non unique PK
+
 # Game id is included in ownerID Foreign key
 class Plantation(db.Entity):
 	ownerID = Required(Player)
 	plantationID = Required(int)
+	#Turn should be required, setting to Optional temporarily so I don't break PRParser right now
+	Turn = Optional(Turn)
 	plantationType = Required(str)
-	activated = Required(bool)
+	activated = Required(bool, default=False)
 	PrimaryKey(ownerID,plantationID)
 
 
@@ -83,8 +94,14 @@ class Ships(db.Entity):
 	Turn = Required(Turn)
 	PrimaryKey(gameID,shipID,Turn)
 
-#Not ready to flesh out yet but I'm sure we'll need it. 
-#class TradingHouse(db.Entity):
+class TradingHouse(db.Entity):
+	gameID = Required(Game)
+	Turn = Required(Turn)
+	Crop1 = str
+	Crop2 = str
+	Crop3 = str
+	Crop4 = str
+
 
 # TURN ON DEBUGGING
 sql_debug(False)
