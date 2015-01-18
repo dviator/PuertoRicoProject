@@ -63,6 +63,7 @@ class Turn(db.Entity):
 	TradingHouse = Set("TradingHouse")
 	#Governor = Required(Player, reverse="playerName")
 	PrimaryKey(gameID,EventNum)
+
 	
 
 # Game id is included in ownerID Foreign key
@@ -71,7 +72,7 @@ class Building(db.Entity):
 	buildingID = Required(int)
 	Turn = Required(Turn)
 	activated = Required(bool, default=False)
-	PrimaryKey(ownerID,buildingID)
+	PrimaryKey(ownerID,buildingID,Turn)
 	
 
 # Game id is included in ownerID Foreign key
