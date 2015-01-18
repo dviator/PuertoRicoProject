@@ -1,14 +1,15 @@
 from pony.orm import *
 import os
+import logging
 
-
-print(os.getcwd())
+Logger = logging.getLogger()
+logging.info(os.getcwd())
 ## Delete created database
 #Check if database exists first.
 #Make sure your working directory is insde \src or this will not
 #Delete the db correctly.
 if os.path.isfile(".\sqlite.db"):
-	print("Deleting existing sqlite.db file")
+	logging.info("Deleting existing sqlite.db file")
 	os.remove("sqlite.db")
 
 
