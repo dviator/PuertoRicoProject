@@ -32,6 +32,12 @@ class TimeTracker:
 		if self.phaseNum % self.num_players == 0:
 			self.roundNum += 1
 
+	def inc_turn(self):
+		self.turnNum += 1
+
+	def inc_event(self):
+		self.eventNum += 1
+
 # end TurnTracker class
 #####################################################
 
@@ -58,7 +64,9 @@ class PRParser:
 		json_data = open(log_name)
 		logging.debug("Parsing PR JSON log " +log_name + "...")
 		self.data = json.load(json_data)
+		#Is the following line accurate?
 		self.totalTurns = len(self.data["data"]["data"])
+		logging.debug("Total turns = " +str(self.totalTurns))
 		self.game = self.initGame()
 		self.Players, self.Plantations = self.getPlayers()
 		self.active_player = None
