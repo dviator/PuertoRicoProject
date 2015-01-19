@@ -4,6 +4,7 @@ import logging
 
 Logger = logging.getLogger()
 logging.info(os.getcwd())
+sql_debug(True)
 ## Delete created database
 #Check if database exists first.
 #Make sure your working directory is insde \src or this will not
@@ -17,9 +18,10 @@ db = Database("sqlite", "sqlite.db", create_db=True)
 
 class Game(db.Entity):
 	gameID = PrimaryKey(int)
-	numOfPlayers = Required(int)
+	numOfPlayers = Required(int, default=0)
 	StartTime = Optional(str)
 	EndTime = Optional(str)
+	gameVariant = Required(str, default="Balanced")
 	Turns = Set("Turn")
 	Players = Set("Player")
 	Ships = Set("Ships")

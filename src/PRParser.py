@@ -14,7 +14,7 @@ import logging
 # action - any granular action
 class TimeTracker:
 
-	def __init__(self, num_players):
+	def __init__(self):
 
 		self.num_players = num_players
 		# Ticks up on every distinct game action/subsequent db write
@@ -58,7 +58,7 @@ class PRParser:
 	def __init__(self, log_name):
 		# Initialize Logger
 		Logger = logging.getLogger()
-		Logger.setLevel("DEBUG")
+		Logger.setLevel("INFO")
 
 		logging.debug("Opening PR JSON log "+ log_name + "...")
 		json_data = open(log_name)
@@ -67,36 +67,30 @@ class PRParser:
 		#Is the following line accurate?
 		self.totalTurns = len(self.data["data"]["data"])
 		logging.debug("Total turns = " +str(self.totalTurns))
-		self.game = self.initGame()
-		self.Players, self.Plantations = self.getPlayers()
+		self.initGame()
 		self.active_player = None
 		# Parse all turns
 		# skip set-up turn
-		self.timeTrack = TimeTracker(len(self.Players))
+		#self.timeTrack = TimeTracker()
 
 		self.currentMove = 1
 		while self.currentMove < self.totalTurns:
 			self.parseMove(self.currentMove)
-			self.timeTrack.inc_phase()
+			#self.timeTrack.inc_phase()
 			self.currentMove += 1
 
 	################################################
 	# FUNCTION initGame()
 	# Initializes the game entity
+
 	def initGame(self):
 		FullID = self.data["data"]["data"][0]["channel"]
 		ID_index = re.search("\d+",FullID)
-		ID = FullID[ID_index.start():]
+		gameID = FullID[ID_index.start():]
 		# TODO: Add times
-		# Number of players will be updated once it is computed
-		return Game(gameID = ID, numOfPlayers = 0)
-
-	################################################
-	# FUNCTION getNumPlayers()
 	# Computes the number of players in a game by analyzing
 	# the first governor round
 	# Initializes the player/plantation table entries
-	def getPlayers(self):
 		# loops through the moves, keeping track of each player seen
 		# when a player name is repeated, know that that a full governor rotation
 		# is completed
@@ -109,9 +103,14 @@ class PRParser:
 					name = move[i]["args"]['player_name']
 					if name not in players:
 						players.append(move[i]["args"]['player_name'])
+		#Initialize the game entity now that we know the number of players in the game. 
+		Game(gameID = gameID, numOfPlayers = len(players))
+
+		#Set the correct starting plantations and doubloons for each party and initializes
+		#the player entries. 
 		Players = []
 		Plantations = []
-		# Plantation ID for starting plantations determined as follows (This is speculation needs to be confirmed):
+		# Plantation ID for starting plantations determined as follows (pretty sure, needs to be confirmed with different player_nums):
 		# 	Corn is 1-index and goes from 1 -> num_corn in the game. Then indigo ranges num_corn -> num_indigo
 		# 	So, the first corn would be pla_id : 1, second corn would be pla_id : 2, and so on.
 		for player_num, player in enumerate(players):
@@ -119,28 +118,74 @@ class PRParser:
 				numDoubloons = 3
 				# Is governor
 				if player_num == 0:
-					plantation = "indigo"
-				else:
-					plantation = "corn"
+					plantationType = "indigo"
+					plantationID = 8
+				elif player_num == 1:
+					plantationType = "corn"
+					plantationID = 1
 			elif len(players) == 3:
 				numDoubloons = 2
-				if player_num == 0 or player_num == 1:
-					plantation = "indigo"
-				else:
-					plantation = "corn"
+				if player_num == 0:
+					plantationType = "indigo"
+					plantationID = 11
+				elif player_num == 1:
+					plantationType = "indigo"
+					plantationID = 12
+				elif player_num == 2:
+					plantationType = "corn"
+					plantationID = 1
 			elif len(players) == 4:
 				numDoubloons = 3
-				if player_num == 0 or player_num == 1:
-					plantation = "indigo"
-				else:
-					plantation = "corn"
-			# Create necessary entities
-			Players.append(Player(gameID = self.game.gameID, playerID = player_num, playerName = player, Doubloons = numDoubloons))
-			Plantations.append(Plantation(ownerID = (self.game.gameID, player_num), plantationID = self.getNextPlantationID(self.game.gameID, player_num),
-										  plantationType = plantation, activated = False))
+				if player_num == 0:
+					plantationType = "indigo"
+					plantationID = 11
+				elif player_num == 1:
+					plantationType = "indigo"
+					plantationID = 12
+				elif player_num == 2:
+					plantationType = "corn"
+					plantationID = 1
+				elif player_num == 3:
+					plantationType == "corn"
+					plantationID = 2
+			elif len(players) == 5:
+				numDoubloons = 4
+				if player_num == 0:
+					plantationType = "indigo"
+					plantationID = 11
+				elif player_num == 1:
+					plantationType = "indigo"
+					plantationID = 12
+				elif player_num == 2:
+					plantationType = "indigo"
+					plantationID = 13
+				elif player_num == 3:
+					plantationType = "corn"
+					plantationID = 1
+				elif player_num == 5:
+					plantationType = "corn"
+					plantationID = 2
+
+			self.game = Game[gameID]
+			if self.game.gameVariant == "Balanced":
+				if plantationType == "corn":
+					numDoubloons -= 1
+
+			print(str(player_num) + ", " + player + ", " + str(plantationID) + ", " + plantationType)
+			Player(gameID = gameID, playerID = player_num, playerName = player, Doubloons = numDoubloons)
+			Plantation(ownerID = (gameID, player_num), plantationID = plantationID,
+										  plantationType = plantationType)
 			# Update game to include number of players
-			self.game.numOfPlayers = len(players)
-		return Players, Plantations
+			
+			######################################################################
+			#I think it may be easier to think of player position in terms of ABCD
+			#rather than 1234. Not going to spend time implementing it now but 
+			#putting this here as a placeholder for the concept.
+			#if player_num == 0:
+				#player_position == "A"
+			#################################################################
+			# Create necessary entities
+			
 
 	# end getPlayers
 	################################################
@@ -407,8 +452,9 @@ if len(sys.argv) != 2:
 parser = PRParser(sys.argv[1])
 
 # Can modify this statement to check the contents of any tables
-#with db_session:
+with db_session:
 	# .show() does a nice pretty logging.debug of whatever the contents
 	# of that query object is
-	#Plantation.select().show()
-	#Player.select().show()
+	Game.select().show()
+	Plantation.select().show()
+	Player.select().show()
