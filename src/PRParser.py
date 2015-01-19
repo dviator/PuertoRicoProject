@@ -11,26 +11,35 @@ import logging
 # Need to figure out the actual names for this but this is the basic idea for the TurnTracker class
 # round - a governor round
 # turn - a player turn in a governor round
-# action - any granular action
+# action - any discrete action
 class TimeTracker:
 
-	def __init__(self):
-
+	def __init__(self, gameID, num_players):
+		self.gameID = gameID
 		self.num_players = num_players
-		# Ticks up on every distinct game action/subsequent db write
+		# Ticks up on every discrete game action/subsequent db write
 		self.eventNum = 0
 		# Cycles once each new governor round
-		self.roundNum = 0
+		self.roundNum = 1
 		# Cycles once each new role phase
-		self.phaseNum = 0
+		self.moveNum = 0
 		# Cycles once each new player turn within a role
 		self.turnNum = 0
+		# Cycles once each new discrete action within a turn
 
 	# Increments the phase and if necessary increments the round
-	def inc_phase(self):
-		self.phaseNum += 1
-		if self.phaseNum % self.num_players == 0:
+	def inc_move(self, active_player_name, rol):
+		self.moveNum += 1
+		if self.moveNum % self.num_players == 0:
 			self.roundNum += 1
+		self.turnNum = 1
+		self.actionNum = 1 
+		self.inc_event()
+		ActivePlayer = Player.get(playerName=active_player_name)
+		print(ActivePlayer)
+		Turn(gameID=self.gameID, ActivePlayer = ActivePlayer, EventNum = self.eventNum,
+			RoundNum = self.roundNum, MoveNum = self.moveNum, TurnNum = self.turnNum, ActionNum = self.actionNum,
+			EventType = "RoleSelection", Action = rol)
 
 	def inc_turn(self):
 		self.turnNum += 1
@@ -58,26 +67,25 @@ class PRParser:
 	def __init__(self, log_name):
 		# Initialize Logger
 		Logger = logging.getLogger()
-		Logger.setLevel("INFO")
+		Logger.setLevel("DEBUG")
 
 		logging.debug("Opening PR JSON log "+ log_name + "...")
 		json_data = open(log_name)
 		logging.debug("Parsing PR JSON log " +log_name + "...")
 		self.data = json.load(json_data)
-		#Is the following line accurate?
+		#Is the following line accurate? Thinking it is, still want to doublecheck when we get a knew log
 		self.totalTurns = len(self.data["data"]["data"])
 		logging.debug("Total turns = " +str(self.totalTurns))
-		self.initGame()
+		# Initialize the game metadata, the players, and their starting plantations
+		self.timeTracker = self.initGame()
 		self.active_player = None
 		# Parse all turns
 		# skip set-up turn
+		self.readGame(self.totalTurns, self.timeTracker)
 		#self.timeTrack = TimeTracker()
 
-		self.currentMove = 1
-		while self.currentMove < self.totalTurns:
-			self.parseMove(self.currentMove)
-			#self.timeTrack.inc_phase()
-			self.currentMove += 1
+		#Loop through the JSON data move by move and record each action. 
+		
 
 	################################################
 	# FUNCTION initGame()
@@ -104,7 +112,8 @@ class PRParser:
 					if name not in players:
 						players.append(move[i]["args"]['player_name'])
 		#Initialize the game entity now that we know the number of players in the game. 
-		Game(gameID = gameID, numOfPlayers = len(players))
+		num_players = len(players)
+		Game(gameID = gameID, numOfPlayers = num_players)
 
 		#Set the correct starting plantations and doubloons for each party and initializes
 		#the player entries. 
@@ -114,7 +123,8 @@ class PRParser:
 		# 	Corn is 1-index and goes from 1 -> num_corn in the game. Then indigo ranges num_corn -> num_indigo
 		# 	So, the first corn would be pla_id : 1, second corn would be pla_id : 2, and so on.
 		for player_num, player in enumerate(players):
-			if len(players) == 2:
+			# 2 Player game settings
+			if num_players == 2:
 				numDoubloons = 3
 				# Is governor
 				if player_num == 0:
@@ -123,7 +133,8 @@ class PRParser:
 				elif player_num == 1:
 					plantationType = "corn"
 					plantationID = 1
-			elif len(players) == 3:
+			# 3 Player game settings
+			elif num_players == 3:
 				numDoubloons = 2
 				if player_num == 0:
 					plantationType = "indigo"
@@ -134,7 +145,8 @@ class PRParser:
 				elif player_num == 2:
 					plantationType = "corn"
 					plantationID = 1
-			elif len(players) == 4:
+			# 4 player game settings
+			elif num_players == 4:
 				numDoubloons = 3
 				if player_num == 0:
 					plantationType = "indigo"
@@ -148,7 +160,8 @@ class PRParser:
 				elif player_num == 3:
 					plantationType == "corn"
 					plantationID = 2
-			elif len(players) == 5:
+			# 5 player game settings
+			elif num_players == 5:
 				numDoubloons = 4
 				if player_num == 0:
 					plantationType = "indigo"
@@ -165,18 +178,21 @@ class PRParser:
 				elif player_num == 5:
 					plantationType = "corn"
 					plantationID = 2
-
+			# Balanced game adjustment			
 			self.game = Game[gameID]
 			if self.game.gameVariant == "Balanced":
 				if plantationType == "corn":
 					numDoubloons -= 1
-
+			#Debug print
 			print(str(player_num) + ", " + player + ", " + str(plantationID) + ", " + plantationType)
+			#Write to the database
 			Player(gameID = gameID, playerID = player_num, playerName = player, Doubloons = numDoubloons)
 			Plantation(ownerID = (gameID, player_num), plantationID = plantationID,
 										  plantationType = plantationType)
-			# Update game to include number of players
-			
+
+			#Initialize TimeTracker
+			timeTracker = TimeTracker(gameID, num_players)
+			return timeTracker
 			######################################################################
 			#I think it may be easier to think of player position in terms of ABCD
 			#rather than 1234. Not going to spend time implementing it now but 
@@ -184,12 +200,21 @@ class PRParser:
 			#if player_num == 0:
 				#player_position == "A"
 			#################################################################
-			# Create necessary entities
+
 			
 
-	# end getPlayers
+	# end initGame
 	################################################
 
+
+	def readGame(self, totalTurns, timeTracker):
+		self.currentMove = 1
+		#Debug setting to look at what's happening move by move
+		self.totalTurns = 2
+		while self.currentMove < self.totalTurns:
+			self.parseMove(self.currentMove, timeTracker)
+			#self.timeTrack.inc_phase()
+			self.currentMove += 1
 	################################################
 	# FUNCTION getNextPlantationID(int gameID, int playerID)
 	# returns the next plantation ID which should be assigned
@@ -208,6 +233,8 @@ class PRParser:
 	# Reads a 0-indexed move id and the parsed json data object
 	# and returns a json array containing a number of "args" object
 	def getMove(self, id):
+		#print("NEW GETMOVE CALL")
+		#print(self.data["data"]["data"][id]["data"])
 		return self.data["data"]["data"][id]["data"]
 
 	# end getMove
@@ -226,13 +253,15 @@ class PRParser:
 	# FUNCTION parseMove(int id)
 	# Parses move number <id> and returns a dictionary of ORM entities
 	# to be accessed/committed to the database
-	def parseMove(self, id):
+	def parseMove(self, id, timeTracker):
 		move = self.getMove(id)
 		# get the role type if there is one in the move
 		if 'rol_type' in move[0]['args']:
 			rol = move[0]['args']['rol_type']
-			active_player = move[0]['args']['player_name']
-			logging.debug(active_player + " selected " + rol)
+			active_player_name = move[0]['args']['player_name']
+			logging.debug(active_player_name + " selected " + rol)
+			self.timeTracker.inc_move(active_player_name,rol)
+
 			if rol == 'craftsman':
 				self.parseCraftsman(move)
 			elif rol == 'builder':
@@ -437,6 +466,8 @@ class PRParser:
 	#def updatePlayer(self, gameID, playerID, playerName, colonists):
 		#return ""
 
+
+
 # End PRParser class
 ####################################################
 
@@ -458,3 +489,4 @@ with db_session:
 	Game.select().show()
 	Plantation.select().show()
 	Player.select().show()
+	Turn.select().show()

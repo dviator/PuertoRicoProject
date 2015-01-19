@@ -35,6 +35,7 @@ class Player(db.Entity):
 	playerName = Required(str)
 	colonists = Required(int, default=0)
 	victoryPoints = Required(int, default=0)
+	victoryPointChips = Required(int, default=0)
 	Doubloons = Required(int, default=0)
 	#Implementing crops as an attribute since there is nothing unique about each crop aside from it's type. Craftsman/Captain can be handled with arithmetic.
 	#Crop Total/running out of crops is likely handled by internal game logic/is constant
@@ -47,6 +48,8 @@ class Player(db.Entity):
 	Plantations = Set("Plantation")
 	PrimaryKey(gameID,playerID)
 
+
+#Unavailable roles will have to be stored somewhere, maybe in the Turn table
 class Turn(db.Entity):
 	gameID = Required(Game)
 	ActivePlayer = Required(Player)
@@ -54,12 +57,18 @@ class Turn(db.Entity):
 	EventNum = Required(int)
 	#Cycles once each new governor round
 	RoundNum = Required(int)
-	#Cycles once each new role phase
-	PhaseNum = Required(int)
+	#Cycles once each new role phase/move
+	#Changing to Move to be consistent with PR log terminology
+	MoveNum = Required(int)
 	#Cycles once each new player turn within a role
 	TurnNum = Required(int)
-	EventType = str
-	Action = str
+	# Keeps track of consecutive actions within a turn, or 
+	# in other words, relative actions to turn. 
+	# This allows the turnNum attribute to track the passing
+	# of the initiative between players within a move.
+	ActionNum = Required(int)
+	EventType = Required(str)
+	Action = Required(str)
 	Ships = Set("Ships")
 	Building = Set("Building")
 	Plantation = Set("Plantation")
